@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>公众号标点符号转换工具</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* 精简可靠的样式 */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
+        body { background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%); min-height: 100vh; padding: 20px; }
+        .container { max-width: 1200px; width: 100%; margin: 0 auto; }
+        header { text-align: center; margin: 20px 0; color: white; }
+        header h1 { font-size: 2.2rem; margin-bottom: 10px; }
+        .app-container { background: white; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); overflow: hidden; margin-bottom: 20px; }
+        .editor-section { display: flex; flex-wrap: wrap; padding: 20px; gap: 20px; }
+        .input-area, .output-area { flex: 1; min-width: 300px; }
+        .text-container { height: 300px; border: 1px solid #ddd; border-radius: 8px; position: relative; }
+        textarea { width: 100%; height: 100%; padding: 15px; border: none; resize: none; font-size: 16px; }
+        .output-text { background: #f8fbff; }
+        .char-count { position: absolute; bottom: 10px; right: 10px; background: rgba(255,255,255,0.8); padding: 2px 10px; border-radius: 10px; font-size: 14px; }
+        .controls { display: flex; justify-content: center; gap: 10px; padding: 15px; flex-wrap: wrap; }
+        .btn { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: 500; display: flex; align-items: center; gap: 5px; }
+        .btn-primary { background: #4a90e2; color: white; }
+        .btn-secondary { background: #e9ecef; }
+        .notification { position: fixed; top: 20px; right: 20px; background: #4CAF50; color: white; padding: 10px 20px; border-radius: 5px; display: none; }
+        .notification.show { display: block; animation: fade 2s forwards; }
+        @keyframes fade { 0%,70% {opacity:1;} 100% {opacity:0;} }
+        @media (max-width: 768px) { .editor-section { flex-direction: column; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>公众号标点符号转换工具</h1>
+            <p>将中文全角标点转换为英文半角标点</p>
+        </header>
+        
+        <div class="app-container">
+            <div class="editor-section">
+                <div class="input-area">
+                    <h2><i class="fas fa-pen"></i> 输入内容</h2>
+                    <div class="text-container">
+                        <textarea id="inputText" placeholder="粘贴公众号文章内容..."></textarea>
+                        <div class="char-count">字数: <span id="inputCount">0</span></div>
+                    </div>
+                </div>
+                
+                <div class="output-area">
+                    <h2><i class="fas fa-file-alt"></i> 转换结果</h2>
+                    <div class="text-container">
+                        <textarea id="outputText" class="output-text" readonly placeholder="转换结果..."></textarea>
+                        <div class="char-count">字数: <span id="outputCount">0</span></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="controls">
+                <button class="btn btn-primary" id="convertBtn">
+                    <i class="fas fa-exchange-alt"></i> 转换
+                </button>
+                <button class="btn btn-secondary" id="sampleBtn">
+                    <i class="fas fa-lightbulb"></i> 示例
+                </button>
+                <button class="btn btn-secondary" id="clearBtn">
+                    <i class="fas fa-trash-alt"></i> 清空
+                </button>
+                <button class="btn btn-primary" id="copyBtn">
+                    <i class="fas fa-copy"></i> 复制
+                </button>
+            </div>
+        </div>
+        
+        <div class="notification" id="notification">
+            内容已复制到剪贴板！
+        </div>
+    </div>
+
+    <script>
+        // 确保工具完全自包含，不依赖外部资源
+        const punctuationMap = {
+            '，': ',', '。': '.', '？': '?', '！': '!', 
+            '：': ':', '；': ';', '“': '"', '”': '"', 
+            '‘': "'", '’': "'", '（': '(', '）': ')', '—': '-'
+        };
+        
+        // 获取DOM元素
+        const inputText = document.getElementById('inputText');
+        const outputText = document.getElementById('outputText');
+        const inputCount = document.getElementById('inputCount');
+        const outputCount = document.getElementById('outputCount');
+        const convertBtn = document.getElementById('convertBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const sampleBtn = document.getElementById('sampleBtn');
+        const copyBtn = document.getElementById('copyBtn');
+        const notification = document.getElementById('notification');
+        
+        // 核心转换函数
+        function convertPunctuation() {
+            const text = inputText.value;
+            if (!text) return;
+            
+            const convertedText = text.split('').map(char => {
+                return punctuationMap[char] || char;
+            }).join('');
+            
+            outputText.value = convertedText;
+            outputCount.textContent = convertedText.length;
+        }
+        
+        // 更新字数统计
+        function updateCharCount() {
+            inputCount.textContent = inputText.value.length;
+        }
+        
+        // 清空内容
+        function clearContent() {
+            inputText.value = '';
+            outputText.value = '';
+            inputCount.textContent = '0';
+            outputCount.textContent = '0';
+        }
+        
+        // 加载示例
+        function loadSample() {
+            inputText.value = `示例文本：
+今天天气真好（阳光明媚）！你是否也想出去走走？
+注意事项：
+1、检查设备；
+2、携带物品；
+3、注意安全...`;
+            updateCharCount();
+        }
+        
+        // 复制结果
+        function copyResult() {
+            outputText.select();
+            document.execCommand('copy');
+            notification.classList.add('show');
+            setTimeout(() => notification.classList.remove('show'), 2000);
+        }
+        
+        // 事件监听
+        inputText.addEventListener('input', updateCharCount);
+        convertBtn.addEventListener('click', convertPunctuation);
+        clearBtn.addEventListener('click', clearContent);
+        sampleBtn.addEventListener('click', loadSample);
+        copyBtn.addEventListener('click', copyResult);
+        
+        // 初始化
+        updateCharCount();
+    </script>
+</body>
+</html>
